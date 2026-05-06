@@ -1,0 +1,214 @@
+--// LuckyBlock Battle GUI FINAL
+
+local UIS = game:GetService("UserInputService")
+local RS = game:GetService("ReplicatedStorage")
+
+-- 🔥 XÓA GUI CŨ NẾU CÓ
+local old = game.CoreGui:FindFirstChild("LuckyBlockGUI")
+if old then
+	old:Destroy()
+end
+
+-- GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+ScreenGui.Name = "LuckyBlockGUI"
+
+-- MAIN
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0.18,0,0.4,0)
+Frame.Position = UDim2.new(0.4,0,0.3,0)
+Frame.BackgroundColor3 = Color3.fromRGB(15,15,15)
+Frame.Active = true
+
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,12)
+
+-- Stroke
+local Stroke = Instance.new("UIStroke", Frame)
+Stroke.Thickness = 2
+
+task.spawn(function()
+	while true do
+		for i = 0,1,0.02 do
+			Stroke.Color = Color3.fromRGB(0,255*(1-i),0)
+			task.wait()
+		end
+		for i = 0,1,0.02 do
+			Stroke.Color = Color3.fromRGB(0,255*i,0)
+			task.wait()
+		end
+	end
+end)
+
+-- HEADER
+local Header = Instance.new("Frame", Frame)
+Header.Size = UDim2.new(1,0,0.2,0)
+Header.BackgroundColor3 = Color3.fromRGB(20,20,20)
+Instance.new("UICorner", Header).CornerRadius = UDim.new(0,12)
+
+-- TITLE
+local Title = Instance.new("TextLabel", Header)
+Title.Size = UDim2.new(0.75,0,0.5,0)
+Title.Text = "LuckyBlock Battle"
+Title.TextScaled = true
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.fromRGB(0,255,0)
+
+-- SUB
+local Sub = Instance.new("TextLabel", Header)
+Sub.Size = UDim2.new(0.75,0,0.5,0)
+Sub.Position = UDim2.new(0,0,0.5,0)
+Sub.Text = "By Phúc Cặc Bự"
+Sub.TextScaled = true
+Sub.BackgroundTransparency = 1
+Sub.TextColor3 = Color3.fromRGB(0,255,0)
+
+-- MIN BUTTON (vuông bo góc)
+local MinBtn = Instance.new("TextButton", Header)
+MinBtn.Size = UDim2.new(0,40,0,40)
+MinBtn.Position = UDim2.new(1,-45,0.5,-20)
+MinBtn.Text = "-"
+MinBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+MinBtn.TextColor3 = Color3.fromRGB(0,255,0)
+
+Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0,8)
+
+-- CONTAINER
+local Container = Instance.new("Frame", Frame)
+Container.Position = UDim2.new(0,0,0.22,0)
+Container.Size = UDim2.new(1,0,0.78,0)
+Container.BackgroundTransparency = 1
+
+local Layout = Instance.new("UIListLayout", Container)
+Layout.Padding = UDim.new(0,6)
+
+-- TOGGLE
+local function createToggle(name, remote)
+	local btn = Instance.new("TextButton", Container)
+	btn.Size = UDim2.new(0.95,0,0.16,0)
+	btn.Position = UDim2.new(0.025,0,0,0)
+	btn.Text = name.." [OFF]"
+	btn.TextScaled = true
+	btn.BackgroundColor3 = Color3.fromRGB(25,25,25)
+	btn.TextColor3 = Color3.fromRGB(0,255,0)
+
+	local corner = Instance.new("UICorner", btn)
+	corner.CornerRadius = UDim.new(0,10)
+
+	local stroke = Instance.new("UIStroke", btn)
+	stroke.Color = Color3.fromRGB(0,100,0)
+	stroke.Thickness = 1
+
+	local state = false
+
+	btn.MouseButton1Click:Connect(function()
+		state = not state
+		btn.Text = name .. (state and " [ON]" or " [OFF]")
+
+		if state then
+			task.spawn(function()
+				while state do
+					RS[remote]:FireServer()
+					task.wait(0.2)
+				end
+			end)
+		end
+	end)
+end
+
+-- BUTTONS
+createToggle("Lucky Block","SpawnLuckyBlock")
+createToggle("Super Block","SpawnSuperBlock")
+createToggle("Diamond Block","SpawnDiamodBlock")
+createToggle("Rainbow Block","SpawnRainbowBlock")
+createToggle("Galaxy Block","SpawnGalaxyBlock")
+
+-- DRAG GUI (giữ mới kéo)
+local dragging = false
+local startPos, startFramePos
+
+Header.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 
+	or input.UserInputType == Enum.UserInputType.Touch then
+		
+		dragging = true
+		startPos = input.Position
+		startFramePos = Frame.Position
+	end
+end)
+
+Header.InputEnded:Connect(function()
+	dragging = false
+end)
+
+UIS.InputChanged:Connect(function(input)
+	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement 
+	or input.UserInputType == Enum.UserInputType.Touch) then
+		
+		local delta = input.Position - startPos
+
+		Frame.Position = UDim2.new(
+			startFramePos.X.Scale,
+			startFramePos.X.Offset + delta.X,
+			startFramePos.Y.Scale,
+			startFramePos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+-- MINI LOGO
+local Mini = Instance.new("ImageButton", ScreenGui)
+Mini.Size = UDim2.new(0,60,0,60)
+Mini.Image = "rbxassetid://112998334"
+Mini.BackgroundColor3 = Color3.fromRGB(20,20,20)
+Mini.Visible = false
+Instance.new("UICorner", Mini).CornerRadius = UDim.new(1,0)
+
+local savedPos = UDim2.new(0.5,-30,0.5,-30)
+Mini.Position = savedPos
+
+-- DRAG LOGO (giữ mới kéo)
+local draggingMini = false
+local miniStart, miniStartPos
+
+Mini.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 
+	or input.UserInputType == Enum.UserInputType.Touch then
+		
+		draggingMini = true
+		miniStart = input.Position
+		miniStartPos = Mini.Position
+	end
+end)
+
+Mini.InputEnded:Connect(function()
+	draggingMini = false
+	savedPos = Mini.Position
+end)
+
+UIS.InputChanged:Connect(function(input)
+	if draggingMini and (input.UserInputType == Enum.UserInputType.MouseMovement 
+	or input.UserInputType == Enum.UserInputType.Touch) then
+		
+		local delta = input.Position - miniStart
+
+		Mini.Position = UDim2.new(
+			miniStartPos.X.Scale,
+			miniStartPos.X.Offset + delta.X,
+			miniStartPos.Y.Scale,
+			miniStartPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+-- MINIMIZE
+MinBtn.MouseButton1Click:Connect(function()
+	Frame.Visible = false
+	Mini.Visible = true
+	Mini.Position = savedPos
+end)
+
+Mini.MouseButton1Click:Connect(function()
+	Frame.Visible = true
+	Mini.Visible = false
+end)
